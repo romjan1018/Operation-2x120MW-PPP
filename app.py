@@ -206,29 +206,29 @@ else:
         today = datetime.date.today()
         current_year = datetime.date.today().strftime("%Y")
 
-        # মূল ডিউটি রোস্টার টেবিল (হেডিং ফ্রিজ করার জন্য sticky css যোগ করা হয়েছে)
+        # মূল ডিউটি রোস্টার টেবিল (হেডিং এবং কলামের নামগুলো ফ্রিজ রাখার জন্য top অফসেট ঠিক করা হয়েছে)
         html_table = (
             '<div style="width: 100%; max-width: 900px; max-height: 500px; overflow-y: auto; overflow-x: auto; margin: 0 auto; font-family: sans-serif; border: 2px solid black;">'
             '<table style="width: 100%; border-collapse: collapse; background-color: white;">'
             "<thead>"
-            # DUTY ROSTER Header Row (Sticky at top 0)
+            # DUTY ROSTER Header Row (Top: 0px)
             '<tr>'
             '<th colspan="8" style="position: sticky; top: 0; z-index: 4; background-color: #7b113a; color: white; padding: 12px; text-align: center; border-bottom: 2px solid black; font-size: 22px; letter-spacing: 2px;">DUTY ROSTER</th>'
             "</tr>"
-            # Year Sub-Header Row (Sticky below roster header)
+            # Year Sub-Header Row (Top: ~51px)
             '<tr>'
-            f'<th colspan="8" style="position: sticky; top: 48px; z-index: 3; background-color: #ffffff; color: #cc0000; padding: 6px; text-align: center; border-bottom: 2px solid black; font-size: 18px; font-weight: bold;">{current_year}</th>'
+            f'<th colspan="8" style="position: sticky; top: 51px; z-index: 3; background-color: #ffffff; color: #cc0000; padding: 6px; text-align: center; border-bottom: 2px solid black; font-size: 18px; font-weight: bold;">{current_year}</th>'
             "</tr>"
-            # Table Column Names Row (Sticky below year header)
+            # Table Column Names Row (Top: ~95px) - এটিও এখন ফ্রিজ থাকবে
             '<tr style="background-color: #262626; color: white;">'
-            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Date</th>'
-            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Day</th>'
-            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 1</th>'
-            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 2</th>'
-            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 3</th>'
-            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 4</th>'
-            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">OA-1</th>'
-            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">OA-2</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Date</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Day</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 1</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 2</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 3</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 4</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">OA-1</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">OA-2</th>'
             "</tr>"
             "</thead>"
             "<tbody>"
@@ -340,7 +340,7 @@ else:
             )
             current_members = st.session_state.shift_members[target_shift]
 
-            edited_members_str = st.text_area(
+            _edited_members_str = st.text_area(
                 "সদস্যদের নাম (প্রতি লাইনে একটি নাম লিখুন):",
                 value="\n".join(current_members),
             )
@@ -348,7 +348,7 @@ else:
             if st.button("তালিকা সেভ করুন"):
                 new_list = [
                     name.strip()
-                    for name in edited_members_str.split("\n")
+                    for name in _edited_members_str.split("\n")
                     if name.strip()
                 ]
                 st.session_state.shift_members[target_shift] = new_list
