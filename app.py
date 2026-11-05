@@ -161,9 +161,9 @@ else:
             {"OA1": "G", "OA2": "0"},
             {"OA1": "A", "OA2": "B"},
             {"OA1": "A", "OA2": "B"},
+            {"OA1": "0", "OA2": "G"},
             {"OA1": "B", "OA2": "A"},
             {"OA1": "B", "OA2": "A"},
-            {"OA1": "G", "OA2": "0"},
         ]
 
         base_date = datetime.date(2026, 10, 28)
@@ -206,29 +206,29 @@ else:
         today = datetime.date.today()
         current_year = datetime.date.today().strftime("%Y")
 
-        # মূল ডিউটি রোস্টার টেবিল (হেডার টেবিলের সাথে সংযুক্ত করা হয়েছে যাতে প্রশস্ততার অমিল না হয়)
+        # মূল ডিউটি রোস্টার টেবিল (হেডিং ফ্রিজ করার জন্য sticky css যোগ করা হয়েছে)
         html_table = (
-            '<div style="width: 100%; max-width: 900px; margin: 0 auto; font-family: sans-serif; overflow-x: auto;">'
-            '<table style="width: 100%; border-collapse: collapse; border: 2px solid black; background-color: white;">'
+            '<div style="width: 100%; max-width: 900px; max-height: 500px; overflow-y: auto; overflow-x: auto; margin: 0 auto; font-family: sans-serif; border: 2px solid black;">'
+            '<table style="width: 100%; border-collapse: collapse; background-color: white;">'
             "<thead>"
-            # DUTY ROSTER Header Row
+            # DUTY ROSTER Header Row (Sticky at top 0)
             '<tr>'
-            '<th colspan="8" style="background-color: #7b113a; color: white; padding: 12px; text-align: center; border: 2px solid black; font-size: 22px; letter-spacing: 2px;">DUTY ROSTER</th>'
+            '<th colspan="8" style="position: sticky; top: 0; z-index: 4; background-color: #7b113a; color: white; padding: 12px; text-align: center; border-bottom: 2px solid black; font-size: 22px; letter-spacing: 2px;">DUTY ROSTER</th>'
             "</tr>"
-            # Year Sub-Header Row
+            # Year Sub-Header Row (Sticky below roster header)
             '<tr>'
-            f'<th colspan="8" style="background-color: #ffffff; color: #cc0000; padding: 6px; text-align: center; border: 2px solid black; font-size: 18px; font-weight: bold;">{current_year}</th>'
+            f'<th colspan="8" style="position: sticky; top: 48px; z-index: 3; background-color: #ffffff; color: #cc0000; padding: 6px; text-align: center; border-bottom: 2px solid black; font-size: 18px; font-weight: bold;">{current_year}</th>'
             "</tr>"
-            # Table Column Names Row
+            # Table Column Names Row (Sticky below year header)
             '<tr style="background-color: #262626; color: white;">'
-            '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">Date</th>'
-            '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">Day</th>'
-            '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 1</th>'
-            '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 2</th>'
-            '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 3</th>'
-            '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 4</th>'
-            '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">OA-1</th>'
-            '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">OA-2</th>'
+            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Date</th>'
+            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Day</th>'
+            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 1</th>'
+            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 2</th>'
+            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 3</th>'
+            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">Shift 4</th>'
+            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">OA-1</th>'
+            '<th style="position: sticky; top: 92px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px;">OA-2</th>'
             "</tr>"
             "</thead>"
             "<tbody>"
@@ -247,14 +247,14 @@ else:
 
             html_table += (
                 f'<tr style="background-color: {bg_color}; color: {text_color}; font-weight: bold; text-align: center;">'
-                f'<td style="border: 2px solid black; padding: 8px; font-size: 14px;">{d.strftime("%d-%b")}</td>'
-                f'<td style="border: 2px solid black; padding: 8px; font-size: 14px;">{d.strftime("%A")}</td>'
-                f'<td style="border: 2px solid black; padding: 8px; font-size: 14px;">{s_p["1"]}</td>'
-                f'<td style="border: 2px solid black; padding: 8px; font-size: 14px;">{s_p["2"]}</td>'
-                f'<td style="border: 2px solid black; padding: 8px; font-size: 14px;">{s_p["3"]}</td>'
-                f'<td style="border: 2px solid black; padding: 8px; font-size: 14px;">{s_p["4"]}</td>'
-                f'<td style="border: 2px solid black; padding: 8px; font-size: 14px;">{o_p["OA1"]}</td>'
-                f'<td style="border: 2px solid black; padding: 8px; font-size: 14px;">{o_p["OA2"]}</td>'
+                f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{d.strftime("%d-%b")}</td>'
+                f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{d.strftime("%A")}</td>'
+                f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{s_p["1"]}</td>'
+                f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{s_p["2"]}</td>'
+                f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{s_p["3"]}</td>'
+                f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{s_p["4"]}</td>'
+                f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{o_p["OA1"]}</td>'
+                f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{o_p["OA2"]}</td>'
                 "</tr>"
             )
 
