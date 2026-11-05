@@ -97,7 +97,7 @@ if not st.session_state.logged_in:
                 st.success("লগইন সফল হয়েছে! ড্যাশবোর্ডে প্রবেশ করা হচ্ছে...")
                 st.rerun()
             else:
-                st.error("ভুল পিন কোড! দয়া করে সঠিক পিন দিয়ে আবার চেষ্টা করুন।")
+                st.error("ভুল পিন কোড! দয়া করে সঠিক পিন দিয়ে আবার চেষ্টা করুন።")
 
 else:
     # -------------------------------------------------------------
@@ -204,9 +204,9 @@ else:
         st.markdown("---")
 
         today = datetime.date.today()
-        current_year = datetime.date.today().strftime("%Y")
+        current_year = today.strftime("%Y")
 
-        # মূল ডিউটি রোস্টার টেবিল (হেডিং এবং কলামের নামগুলো ফ্রিজ রাখার জন্য top অফসেট ঠিক করা হয়েছে)
+        # মূল ডিউটি রোস্টার টেবিল
         html_table = (
             '<div style="width: 100%; max-width: 900px; max-height: 500px; overflow-y: auto; overflow-x: auto; margin: 0 auto; font-family: sans-serif; border: 2px solid black;">'
             '<table style="width: 100%; border-collapse: collapse; background-color: white;">'
@@ -219,7 +219,7 @@ else:
             '<tr>'
             f'<th colspan="8" style="position: sticky; top: 51px; z-index: 3; background-color: #ffffff; color: #cc0000; padding: 6px; text-align: center; border-bottom: 2px solid black; font-size: 18px; font-weight: bold;">{current_year}</th>'
             "</tr>"
-            # Table Column Names Row (Top: ~95px) - এটিও এখন ফ্রিজ থাকবে
+            # Table Column Names Row (Top: ~95px)
             '<tr style="background-color: #262626; color: white;">'
             '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Date</th>'
             '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Day</th>'
@@ -234,7 +234,9 @@ else:
             "<tbody>"
         )
 
-        for i in range(-8, 25):
+        # এখানে লুপটি -8 থেকে শুরু হয়েছে (অর্থাৎ আজকের আগের ৮ দিন ওপরের দিকে থাকবে) 
+        # এবং সামনে আরও ২২ দিন পর্যন্ত দেখাবে, ফলে আজকের দিনটি ওপরের দিকেই নির্দিষ্ট পজিশনে থাকবে।
+        for i in range(-8, 23):
             d = today + datetime.timedelta(days=i)
             day_diff = (d - base_date).days
 
@@ -242,11 +244,13 @@ else:
             o_p = oa_pattern[day_diff % 6]
 
             is_today = d == today
-            bg_color = "#ffe6e6" if is_today else "#ffffff"
-            text_color = "#cc0000" if is_today else "#000000"
+            # আজকের দিনের সারি আলাদা রঙে হাইলাইট ও বোল্ড থাকবে
+            bg_color = "#ffcccc" if is_today else "#ffffff"
+            text_color = "#990000" if is_today else "#000000"
+            font_weight = "bold" if is_today else "bold"
 
             html_table += (
-                f'<tr style="background-color: {bg_color}; color: {text_color}; font-weight: bold; text-align: center;">'
+                f'<tr style="background-color: {bg_color}; color: {text_color}; font-weight: {font_weight}; text-align: center;">'
                 f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{d.strftime("%d-%b")}</td>'
                 f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{d.strftime("%A")}</td>'
                 f'<td style="border: 1px solid black; padding: 8px; font-size: 14px;">{s_p["1"]}</td>'
