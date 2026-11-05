@@ -104,7 +104,7 @@ else:
     # ২. মেইন ড্যাশবোর্ড (লগইন হওয়ার পর)
     # -------------------------------------------------------------
     st.sidebar.title(f"👤 {st.session_state.user_name}")
-    st.sidebar.info(f"রোল (Role): *{st.session_state.user_role}*")
+    st.sidebar.info(f"রোল (Role): {st.session_state.user_role}")
     st.sidebar.markdown("---")
 
     menu_options = ["ডিউটি রোস্টার ও সার্চ", "টেম্পোরারি নোটিশ বোর্ড"]
@@ -173,32 +173,53 @@ else:
         o_pat = oa_pattern[search_day_diff % 6]
 
         st.success(
-            f"📅 *{selected_search_date.strftime('%d-%b-%Y (%A)')}* এর ডিউটি স্ট্যাটাস:"
+            f"📅 {selected_search_date.strftime('%d-%b-%Y (%A)')} এর ডিউটি স্ট্যাটাস:"
         )
-        c1, c2, c3, c4, c5, c6 = st.columns(6)
-        c1.metric("Shift 1", s_pat["1"])
-        c2.metric("Shift 2", s_pat["2"])
-        c3.metric("Shift 3", s_pat["3"])
-        c4.metric("Shift 4", s_pat["4"])
-        c5.metric("OA-1", o_pat["OA1"])
-        c6.metric("OA-2", o_pat["OA2"])
+
+        # মোবাইলে এক সারিতে দেখানোর জন্য রেসপনসিভ ফ্লেক্সবক্স টেবিল
+        single_row_html = f"""
+        <div style="overflow-x: auto; width: 100%; margin-bottom: 20px;">
+            <table style="width: 100%; border-collapse: collapse; border: 2px solid black; background-color: white; text-align: center; font-family: sans-serif;">
+                <tr style="background-color: #262626; color: white; font-size: 13px;">
+                    <th style="border: 1px solid black; padding: 6px;">Shift 1</th>
+                    <th style="border: 1px solid black; padding: 6px;">Shift 2</th>
+                    <th style="border: 1px solid black; padding: 6px;">Shift 3</th>
+                    <th style="border: 1px solid black; padding: 6px;">Shift 4</th>
+                    <th style="border: 1px solid black; padding: 6px;">OA-1</th>
+                    <th style="border: 1px solid black; padding: 6px;">OA-2</th>
+                </tr>
+                <tr style="font-weight: bold; font-size: 16px; color: #000000;">
+                    <td style="border: 1px solid black; padding: 10px;">{s_pat["1"]}</td>
+                    <td style="border: 1px solid black; padding: 10px;">{s_pat["2"]}</td>
+                    <td style="border: 1px solid black; padding: 10px;">{s_pat["3"]}</td>
+                    <td style="border: 1px solid black; padding: 10px;">{s_pat["4"]}</td>
+                    <td style="border: 1px solid black; padding: 10px;">{o_pat["OA1"]}</td>
+                    <td style="border: 1px solid black; padding: 10px;">{o_pat["OA2"]}</td>
+                </tr>
+            </table>
+        </div>
+        """
+        st.markdown(single_row_html, unsafe_allow_html=True)
 
         st.markdown("---")
 
         today = datetime.date.today()
         current_year = datetime.date.today().strftime("%Y")
 
-        # এইচটিএমএল টেবিল তৈরি
+        # মূল ডিউটি রোস্টার টেবিল (হেডার টেবিলের সাথে সংযুক্ত করা হয়েছে যাতে প্রশস্ততার অমিল না হয়)
         html_table = (
-            '<div style="width: 100%; max-width: 900px; margin: 0 auto; font-family: sans-serif;">'
-            '<div style="background-color: #7b113a; padding: 12px; text-align: center; border: 2px solid black; border-bottom: none;">'
-            '<span style="color: white; font-weight: bold; font-size: 22px; letter-spacing: 2px;">DUTY ROSTER</span>'
-            "</div>"
-            '<div style="background-color: #ffffff; padding: 6px; text-align: center; border: 2px solid black; border-top: 1px solid black; border-bottom: 2px solid black;">'
-            f'<span style="color: #cc0000; font-weight: bold; font-size: 18px;">{current_year}</span>'
-            "</div>"
+            '<div style="width: 100%; max-width: 900px; margin: 0 auto; font-family: sans-serif; overflow-x: auto;">'
             '<table style="width: 100%; border-collapse: collapse; border: 2px solid black; background-color: white;">'
             "<thead>"
+            # DUTY ROSTER Header Row
+            '<tr>'
+            '<th colspan="8" style="background-color: #7b113a; color: white; padding: 12px; text-align: center; border: 2px solid black; font-size: 22px; letter-spacing: 2px;">DUTY ROSTER</th>'
+            "</tr>"
+            # Year Sub-Header Row
+            '<tr>'
+            f'<th colspan="8" style="background-color: #ffffff; color: #cc0000; padding: 6px; text-align: center; border: 2px solid black; font-size: 18px; font-weight: bold;">{current_year}</th>'
+            "</tr>"
+            # Table Column Names Row
             '<tr style="background-color: #262626; color: white;">'
             '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">Date</th>'
             '<th style="border: 2px solid black; padding: 8px; text-align: center; font-size: 15px;">Day</th>'
@@ -239,7 +260,6 @@ else:
 
         html_table += "</tbody></table></div>"
 
-        # সঠিকভাবে রেন্ডার করার জন্য এখানে unsafe_allow_html=True দেওয়া হয়েছে
         st.markdown(html_table, unsafe_allow_html=True)
 
     # --- মডিউল খ: টেম্পোরারি নোটিশ বোর্ড ---
@@ -283,32 +303,33 @@ else:
                 ["Shift 1", "Shift 2", "Shift 3", "Shift 4", "OA-1", "OA-2"],
             )
             member_list = st.session_state.shift_members[selected_shift_from]
-            selected_member = st.selectbox(
-                "মেম্বারের নাম সিলেক্ট করুন:", member_list
-            )
+            
+            if member_list:
+                selected_member = st.selectbox(
+                    "মেম্বারের নাম সিলেক্ট করুন:", member_list
+                )
 
-            selected_shift_to = st.selectbox(
-                "নতুন কোন শিফটে নিতে চান?",
-                ["Shift 1", "Shift 2", "Shift 3", "Shift 4", "OA-1", "OA-2"],
-            )
+                selected_shift_to = st.selectbox(
+                    "নতুন কোন শিফটে নিতে চান?",
+                    ["Shift 1", "Shift 2", "Shift 3", "Shift 4", "OA-1", "OA-2"],
+                )
 
-            if st.button("মেম্বারের শিফট আপডেট করুন"):
-                if (
-                    selected_shift_from != selected_shift_to
-                    and selected_member != "-"
-                ):
-                    st.session_state.shift_members[selected_shift_from].remove(
-                        selected_member
-                    )
-                    st.session_state.shift_members[selected_shift_to].append(
-                        selected_member
-                    )
-                    st.success(
-                        f"সফলভাবে {selected_member}-কে {selected_shift_from} থেকে {selected_shift_to}-এ ট্রান্সফার করা হয়েছে!"
-                    )
-                    st.rerun()
-                else:
-                    st.warning("দয়া করে দুটি আলাদা ক্যাটাগরি সিলেক্ট করুন।")
+                if st.button("মেম্বারের শিফট আপডেট করুন"):
+                    if selected_shift_from != selected_shift_to:
+                        st.session_state.shift_members[selected_shift_from].remove(
+                            selected_member
+                        )
+                        st.session_state.shift_members[selected_shift_to].append(
+                            selected_member
+                        )
+                        st.success(
+                            f"সফলভাবে {selected_member}-কে {selected_shift_from} থেকে {selected_shift_to}-এ ট্রান্সফার করা হয়েছে!"
+                        )
+                        st.rerun()
+                    else:
+                        st.warning("দয়া করে দুটি আলাদা ক্যাটাগরি সিলেক্ট করুন।")
+            else:
+                st.warning("এই শিফটে বর্তমানে কোনো সদস্য নেই।")
 
         with col_right:
             st.markdown("### 📝 সরাসরি সদস্যের নাম সংশোধন/এডিট")
