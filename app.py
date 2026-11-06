@@ -111,7 +111,6 @@ if "user_role" not in st.session_state:
 if "active_page" not in st.session_state:
     st.session_state.active_page = "🏠 Home Page"
 
-# Selected shift view for click-to-view feature
 if "selected_shift_view" not in st.session_state:
     st.session_state.selected_shift_view = None
 
@@ -345,37 +344,44 @@ else:
 
         st.markdown("### 📢 Temporary Notice Board")
 
-        with st.form("home_notice_form", clear_on_submit=True):
-            new_notice = st.text_input("Post a new notice:")
-            add_btn = st.form_submit_button("Publish Notice")
-            if add_btn:
-                if new_notice.strip():
-                    st.session_state.notices.append(
-                        f"{new_notice.strip()} (By: {st.session_state.full_name})"
-                    )
-                    save_notices(st.session_state.notices)
-                    st.success("Notice published successfully!")
-                    st.rerun()
-                else:
-                    st.warning("Please write something for the notice.")
+        # Notice Publishing Section (Direct text input and button outside strict forms)
+        notice_input = st.text_input(
+            "Write a new notice:", key="notice_input_field"
+        )
+        if st.button("Publish Notice"):
+            if notice_input.strip():
+                # Load latest from file first to avoid overwriting conflicts
+                current_list = load_notices()
+                current_list.append(
+                    f"{notice_input.strip()} (By: {st.session_state.full_name})"
+                )
+                save_notices(current_list)
+                st.session_state.notices = current_list
+                st.success("Notice published successfully!")
+                st.rerun()
+            else:
+                st.warning("Please write something for the notice.")
 
         st.markdown("#### Active Notices:")
-        current_notices = load_notices()
-        st.session_state.notices = current_notices
+        # Always fetch latest from file
+        active_notices = load_notices()
+        st.session_state.notices = active_notices
 
-        if len(st.session_state.notices) == 0:
+        if not active_notices or len(active_notices) == 0:
             st.info("No active notices.")
         else:
-            for idx, notice in enumerate(st.session_state.notices):
+            for idx, notice in enumerate(active_notices):
                 col_n1, col_n2 = st.columns([8, 2])
                 with col_n1:
                     st.markdown(f"📌 {notice}")
                 with col_n2:
                     if st.session_state.user_role == "Admin" or st.button(
-                        "Delete", key=f"home_del_{idx}"
+                        "Delete", key=f"del_notice_{idx}"
                     ):
-                        st.session_state.notices.pop(idx)
-                        save_notices(st.session_state.notices)
+                        active_notices.pop(idx)
+                        save_notices(active_notices)
+                        st.session_state.notices = active_notices
+                        st.success("Notice deleted!")
                         st.rerun()
 
     # =============================================================
@@ -421,7 +427,6 @@ else:
             f"📅 Status for {selected_search_date.strftime('%d-%b-%Y (%A)')}:"
         )
 
-        # --- Click-to-View Shift Members Buttons (Mobile & PC Friendly) ---
         st.markdown(
             "👇 *শIFT বা OA-এর ওপর ক্লিক করে মেম্বারদের তালিকা দেখুন:*"
         )
@@ -446,7 +451,6 @@ else:
             if st.button("OA-2", use_container_width=True):
                 st.session_state.selected_shift_view = "OA-2"
 
-        # Display selected shift members box if clicked
         if st.session_state.selected_shift_view:
             sh_name = st.session_state.selected_shift_view
             members = st.session_state.shift_members.get(sh_name, [])
