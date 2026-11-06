@@ -67,13 +67,18 @@ def save_users(users):
 
 
 def load_notices():
+    default_notice_list = [
+        "Urgent: Please submit shift handover reports on time."
+    ]
     if os.path.exists(NOTICES_FILE):
         with open(NOTICES_FILE, "r", encoding="utf-8") as f:
             try:
-                return json.load(f)
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
             except:
-                return ["Urgent: Please submit shift handover reports on time."]
-    return ["Urgent: Please submit shift handover reports on time."]
+                pass
+    return default_notice_list
 
 
 def save_notices(notices):
@@ -106,7 +111,11 @@ if "user_role" not in st.session_state:
 if "active_page" not in st.session_state:
     st.session_state.active_page = "🏠 Home Page"
 
-# Shift Members and OA Members Database
+# Selected shift view for click-to-view feature
+if "selected_shift_view" not in st.session_state:
+    st.session_state.selected_shift_view = None
+
+# Shift Members Database
 if "shift_members" not in st.session_state:
     st.session_state.shift_members = {
         "Shift 1": [
@@ -335,16 +344,24 @@ else:
         st.markdown("---")
 
         st.markdown("### 📢 Temporary Notice Board")
-        with st.form("home_notice_form"):
+
+        with st.form("home_notice_form", clear_on_submit=True):
             new_notice = st.text_input("Post a new notice:")
             add_btn = st.form_submit_button("Publish Notice")
-            if add_btn and new_notice:
-                st.session_state.notices.append(
-                    f"{new_notice} (By: {st.session_state.full_name})"
-                )
-                save_notices(st.session_state.notices)
-                st.success("Notice published successfully!")
-                st.rerun()
+            if add_btn:
+                if new_notice.strip():
+                    st.session_state.notices.append(
+                        f"{new_notice.strip()} (By: {st.session_state.full_name})"
+                    )
+                    save_notices(st.session_state.notices)
+                    st.success("Notice published successfully!")
+                    st.rerun()
+                else:
+                    st.warning("Please write something for the notice.")
+
+        st.markdown("#### Active Notices:")
+        current_notices = load_notices()
+        st.session_state.notices = current_notices
 
         if len(st.session_state.notices) == 0:
             st.info("No active notices.")
@@ -404,24 +421,48 @@ else:
             f"📅 Status for {selected_search_date.strftime('%d-%b-%Y (%A)')}:"
         )
 
-        # Prepare member lists for tooltips/hover display
-        s1_names = ", ".join(st.session_state.shift_members["Shift 1"])
-        s2_names = ", ".join(st.session_state.shift_members["Shift 2"])
-        s3_names = ", ".join(st.session_state.shift_members["Shift 3"])
-        s4_names = ", ".join(st.session_state.shift_members["Shift 4"])
-        oa1_names = ", ".join(st.session_state.shift_members["OA-1"])
-        oa2_names = ", ".join(st.session_state.shift_members["OA-2"])
+        # --- Click-to-View Shift Members Buttons (Mobile & PC Friendly) ---
+        st.markdown(
+            "👇 *শIFT বা OA-এর ওপর ক্লিক করে মেম্বারদের তালিকা দেখুন:*"
+        )
+        b1, b2, b3, b4, b5, b6 = st.columns(6)
+
+        with b1:
+            if st.button("Shift 1", use_container_width=True):
+                st.session_state.selected_shift_view = "Shift 1"
+        with b2:
+            if st.button("Shift 2", use_container_width=True):
+                st.session_state.selected_shift_view = "Shift 2"
+        with b3:
+            if st.button("Shift 3", use_container_width=True):
+                st.session_state.selected_shift_view = "Shift 3"
+        with b4:
+            if st.button("Shift 4", use_container_width=True):
+                st.session_state.selected_shift_view = "Shift 4"
+        with b5:
+            if st.button("OA-1", use_container_width=True):
+                st.session_state.selected_shift_view = "OA-1"
+        with b6:
+            if st.button("OA-2", use_container_width=True):
+                st.session_state.selected_shift_view = "OA-2"
+
+        # Display selected shift members box if clicked
+        if st.session_state.selected_shift_view:
+            sh_name = st.session_state.selected_shift_view
+            members = st.session_state.shift_members.get(sh_name, [])
+            members_str = ", ".join(members)
+            st.info(f"👥 *{sh_name} Members:* {members_str}")
 
         single_row_html = f"""
-        <div style="overflow-x: auto; width: 100%; margin-bottom: 20px;">
+        <div style="overflow-x: auto; width: 100%; margin-top: 10px; margin-bottom: 20px;">
             <table style="width: 100%; border-collapse: collapse; border: 2px solid black; background-color: white; text-align: center; font-family: sans-serif;">
                 <tr style="background-color: #262626; color: white; font-size: 13px;">
-                    <th style="border: 1px solid black; padding: 6px;" title="Members: {s1_names}">Shift 1 (Hover for Members)</th>
-                    <th style="border: 1px solid black; padding: 6px;" title="Members: {s2_names}">Shift 2 (Hover for Members)</th>
-                    <th style="border: 1px solid black; padding: 6px;" title="Members: {s3_names}">Shift 3 (Hover for Members)</th>
-                    <th style="border: 1px solid black; padding: 6px;" title="Members: {s4_names}">Shift 4 (Hover for Members)</th>
-                    <th style="border: 1px solid black; padding: 6px;" title="Members: {oa1_names}">OA-1 (Hover for Members)</th>
-                    <th style="border: 1px solid black; padding: 6px;" title="Members: {oa2_names}">OA-2 (Hover for Members)</th>
+                    <th style="border: 1px solid black; padding: 6px;">Shift 1</th>
+                    <th style="border: 1px solid black; padding: 6px;">Shift 2</th>
+                    <th style="border: 1px solid black; padding: 6px;">Shift 3</th>
+                    <th style="border: 1px solid black; padding: 6px;">Shift 4</th>
+                    <th style="border: 1px solid black; padding: 6px;">OA-1</th>
+                    <th style="border: 1px solid black; padding: 6px;">OA-2</th>
                 </tr>
                 <tr style="font-weight: bold; font-size: 16px; color: #000000;">
                     <td style="border: 1px solid black; padding: 10px;">{s_pat["1"]}</td>
@@ -454,12 +495,12 @@ else:
             '<tr style="background-color: #262626; color: white;">'
             '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Date</th>'
             '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Day</th>'
-            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {s1_names}">Shift 1 ℹ️</th>'
-            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {s2_names}">Shift 2 ℹ️</th>'
-            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {s3_names}">Shift 3 ℹ️</th>'
-            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {s4_names}">Shift 4 ℹ️</th>'
-            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {oa1_names}">OA-1 ℹ️</th>'
-            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {oa2_names}">OA-2 ℹ️</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 1</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 2</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 3</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 4</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">OA-1</th>'
+            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">OA-2</th>'
             "</tr>"
             "</thead>"
             "<tbody>"
