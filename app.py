@@ -97,7 +97,7 @@ if not st.session_state.logged_in:
                 st.success("লগইন সফল হয়েছে! ড্যাশবোর্ডে প্রবেশ করা হচ্ছে...")
                 st.rerun()
             else:
-                st.error("ভুল পিন কোড! দয়া করে সঠিক পিন দিয়ে আবার চেষ্টা করুন።")
+                st.error("ভুল পিন কোড! দয়া করে সঠিক পিন দিয়ে আবার চেষ্টা করুন।")
 
 else:
     # -------------------------------------------------------------
@@ -234,9 +234,8 @@ else:
             "<tbody>"
         )
 
-        # এখানে লুপটি -8 থেকে শুরু হয়েছে (অর্থাৎ আজকের আগের ৮ দিন ওপরের দিকে থাকবে) 
-        # এবং সামনে আরও ২২ দিন পর্যন্ত দেখাবে, ফলে আজকের দিনটি ওপরের দিকেই নির্দিষ্ট পজিশনে থাকবে।
-        for i in range(-8, 23):
+        # লুপটি -8 থেকে শুরু (পূর্ববর্তী ৮ দিন) এবং ২৬ পর্যন্ত (আজসহ পরবর্তী ২৫ দিন, মোট ৩৪টি সারি)
+        for i in range(-8, 26):
             d = today + datetime.timedelta(days=i)
             day_diff = (d - base_date).days
 
@@ -244,7 +243,6 @@ else:
             o_p = oa_pattern[day_diff % 6]
 
             is_today = d == today
-            # আজকের দিনের সারি আলাদা রঙে হাইলাইট ও বোল্ড থাকবে
             bg_color = "#ffcccc" if is_today else "#ffffff"
             text_color = "#990000" if is_today else "#000000"
             font_weight = "bold" if is_today else "bold"
