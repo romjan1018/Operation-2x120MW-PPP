@@ -4,40 +4,39 @@ import os
 import pandas as pd
 import streamlit as st
 
-# পেজ কনফিগারেশন
+# Page Configuration
 st.set_page_config(
     page_title="Power Plant Operation System", page_icon="⚡", layout="wide"
 )
 
 # -------------------------------------------------------------
-# ইউজার ডাটাবেজ ফাইল ম্যানেজমেন্ট (JSON সেভ করার ব্যবস্থা)
+# User Database File Management
 # -------------------------------------------------------------
 USERS_FILE = "users_db.json"
 
-# ডিফল্ট ৪ জন নির্দিষ্ট এডমিন (এদের অ্যাকাউন্ট অলরেডি Approved থাকবে)
 default_users = {
-    "shift1st": {
+    "SHIFT-1ST": {
         "full_name": "Shift In-Charge 1st",
         "designation": "Shift Admin",
         "pin": "1111",
         "role": "Admin",
         "approved": True,
     },
-    "shift2nd": {
+    "SHIFT-2ND": {
         "full_name": "Shift In-Charge 2nd",
         "designation": "Shift Admin",
         "pin": "2222",
         "role": "Admin",
         "approved": True,
     },
-    "shift3rd": {
+    "SHIFT-3RD": {
         "full_name": "Shift In-Charge 3rd",
         "designation": "Shift Admin",
         "pin": "3333",
         "role": "Admin",
         "approved": True,
     },
-    "shift4th": {
+    "SHIFT-4TH": {
         "full_name": "Shift In-Charge 4th",
         "designation": "Shift Admin",
         "pin": "4444",
@@ -66,7 +65,7 @@ if "users_db" not in st.session_state:
     st.session_state.users_db = load_users()
 
 # -------------------------------------------------------------
-# সেশন স্টেট (লগইন ধরে রাখার জন্য)
+# Session State Setup
 # -------------------------------------------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -79,7 +78,7 @@ if "designation" not in st.session_state:
 if "user_role" not in st.session_state:
     st.session_state.user_role = ""
 
-# শিফট মেম্বারস এবং OA মেম্বার ডাটাবেজ
+# Shift Members and OA Members Database
 if "shift_members" not in st.session_state:
     st.session_state.shift_members = {
         "Shift 1": [
@@ -121,45 +120,47 @@ if "shift_members" not in st.session_state:
 
 if "notices" not in st.session_state:
     st.session_state.notices = [
-        "জরুরি নোটিশ: শিফট পরিবর্তনের সময় হ্যান্ডওভার রিপোর্ট সঠিকভাবে জমা দিন।"
+        "Urgent: Please submit shift handover reports on time."
     ]
 
 # -------------------------------------------------------------
-# ১. লগইন এবং সাইন-আপ প্যানেল
+# 1. Login and Sign-Up Panel
 # -------------------------------------------------------------
 if not st.session_state.logged_in:
-    st.title("⚡ Power Plant Operation & Automation System")
-    st.markdown("### 🔐 পোর্টাল অ্যাক্সেস প্যানেল")
+    st.title("⚡ Power Plant Operation System")
+    st.markdown("### 🔐 Portal Access")
 
-    auth_tab1, auth_tab2 = st.tabs(["🔑 লগইন (Login)", "📝 সাইন আপ (Sign Up)"])
+    auth_tab1, auth_tab2 = st.tabs(["🔑 Login", "📝 Sign Up"])
 
-    # --- লগইন ট্যাব ---
     with auth_tab1:
-        st.write("আপনার ইউজার আইডি ও পাসওয়ার্ড দিয়ে প্রবেশ করুন:")
+        st.caption("Enter your User ID and Password:")
         with st.form("login_form"):
-            input_user_id = st.text_input("User ID (ইউজার আইডি):").strip()
-            input_password = st.text_input(
-                "Password (পাসওয়ার্ড):", type="password"
-            )
-            login_btn = st.form_submit_button("লগইন করুন")
+            raw_user_id = st.text_input("User ID:").strip()
+            input_password = st.text_input("Password:", type="password")
+            login_btn = st.form_submit_button("Login")
 
             if login_btn:
-                user_info = st.session_state.users_db.get(input_user_id)
+                formatted_user_id = raw_user_id.upper()
+                user_info = st.session_state.users_db.get(formatted_user_id)
 
                 if not user_info:
-                    st.error("এই ইউজার আইডিটি সিস্টেমে পাওয়া যায়নি!")
+                    for uid in list(st.session_state.users_db.keys()):
+                        if uid.upper() == formatted_user_id:
+                            formatted_user_id = uid
+                            user_info = st.session_state.users_db.get(uid)
+                            break
+
+                if not user_info:
+                    st.error("User ID not found!")
                 elif user_info["pin"] != input_password:
-                    st.error("ভুল পাসওয়ার্ড! দয়া করে সঠিক পাসওয়ার্ড দিন।")
+                    st.error("Invalid password!")
                 elif not user_info.get("approved", False):
-                    st.warning(
-                        "আপনার অ্যাকাউন্টটি এখনও এডমিন দ্বারা অনুমোদিত হয়নি। অনুমোদনের জন্য অপেক্ষা করুন।"
-                    )
+                    st.warning("Account pending admin approval.")
                 else:
-                    # সফল লগইন এবং সেশন স্টেট সেভ
                     st.session_state.logged_in = True
-                    st.session_state.user_id = input_user_id
+                    st.session_state.user_id = formatted_user_id
                     st.session_state.full_name = user_info.get(
-                        "full_name", input_user_id
+                        "full_name", formatted_user_id
                     )
                     st.session_state.designation = user_info.get(
                         "designation", "Engineer"
@@ -168,29 +169,21 @@ if not st.session_state.logged_in:
                         "role", "Engineer"
                     )
 
-                    st.success("লগইন সফল হয়েছে! ড্যাশবোর্ডে প্রবেশ করা হচ্ছে...")
+                    st.success("Login successful!")
                     st.rerun()
 
-    # --- সাইন আপ ট্যাব ---
     with auth_tab2:
-        st.write(
-            "নতুন অ্যাকাউন্ট তৈরির জন্য নিচের ঘরগুলো পূরণ করুন (এডমিনের অনুমোদনের পর লগইন করতে পারবেন):"
-        )
+        st.caption("Fill details for new account (Approval required):")
         with st.form("signup_form"):
-            new_fullname = st.text_input("Full Name (পুরো নাম):").strip()
-            new_designation = st.text_input(
-                "Designation (পদবী/পজিশন):"
-            ).strip()
-            new_userid = st.text_input(
-                "User ID (পছন্দমতো ইউজার আইডি):"
-            ).strip()
-            new_password = st.text_input(
-                "Password (গোপন পাসওয়ার্ড):", type="password"
-            )
+            new_fullname = st.text_input("Full Name:").strip()
+            new_designation = st.text_input("Designation:").strip()
+            new_userid_raw = st.text_input("Preferred User ID:").strip()
+            new_password = st.text_input("Password:", type="password")
 
-            signup_btn = st.form_submit_button("সাইন আপ করুন")
+            signup_btn = st.form_submit_button("Sign Up")
 
             if signup_btn:
+                new_userid = new_userid_raw.upper()
                 if (
                     new_fullname
                     and new_designation
@@ -198,11 +191,8 @@ if not st.session_state.logged_in:
                     and new_password
                 ):
                     if new_userid in st.session_state.users_db:
-                        st.error(
-                            "এই User ID টি ইতিমধ্যে ব্যবহৃত হচ্ছে। অন্য আইডি ব্যবহার করুন।"
-                        )
+                        st.error("User ID already taken! Try another.")
                     else:
-                        # নতুন ইউজারের ডাটা সেভ (Approved = False)
                         st.session_state.users_db[new_userid] = {
                             "full_name": new_fullname,
                             "designation": new_designation,
@@ -212,32 +202,32 @@ if not st.session_state.logged_in:
                         }
                         save_users(st.session_state.users_db)
                         st.success(
-                            f"ধন্যবাদ {new_fullname}! আপনার সাইন-আপ আবেদন জমা হয়েছে। এডমিন অনুমোদন দিলে আপনি এই User ID ও Password দিয়ে লগইন করতে পারবেন।"
+                            "Registration sent! Wait for admin approval."
                         )
                 else:
-                    st.warning("দয়া করে প্রতিটি ঘর (Field) সঠিকভাবে পূরণ করুন।")
+                    st.warning("Please fill in all fields.")
 
 else:
     # -------------------------------------------------------------
-    # ২. মেইন ড্যাশবোর্ড (লগইন থাকা অবস্থায়)
+    # 2. Main Dashboard & Navigation (Home Page, Roster, etc.)
     # -------------------------------------------------------------
+
+    # Sidebar Profile & Controls
     st.sidebar.title(f"👤 {st.session_state.full_name}")
     st.sidebar.caption(f"📌 {st.session_state.designation}")
-    st.sidebar.info(f"রোল (Role): {st.session_state.user_role}")
+    st.sidebar.info(f"Role: {st.session_state.user_role}")
     st.sidebar.markdown("---")
 
-    menu_options = ["ডিউটি রোস্টার ও সার্চ", "টেম্পোরারি নোটিশ বোর্ড"]
-
+    # Main Navigation menu (Home Page as default)
+    nav_options = ["🏠 Home Page", "📅 Duty Roster"]
     if st.session_state.user_role == "Admin":
-        menu_options.append("এডমিন কন্ট্রোল (Shift & User Management)")
+        nav_options.append("🛠️ Admin Control")
 
-    menu = st.sidebar.selectbox("মেনু নির্বাচন করুন", menu_options)
+    selected_page = st.sidebar.radio("Navigation Menu", nav_options)
 
-    # -------------------------------------------------------------
-    # ৩. পাশের প্যানেলে Shift Members Table প্রদর্শন
-    # -------------------------------------------------------------
+    # Sidebar Shift Members Table
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 👥 Shift Members Table")
+    st.sidebar.markdown("### 👥 Shift Members")
     df_side_members = pd.DataFrame(
         {
             "Shift 1": pd.Series(st.session_state.shift_members["Shift 1"]),
@@ -248,51 +238,42 @@ else:
             "OA-2": pd.Series(st.session_state.shift_members["OA-2"]),
         }
     )
-    st.sidebar.dataframe(df_side_members, height=300)
+    st.sidebar.dataframe(df_side_members, height=250)
 
     st.sidebar.markdown("---")
 
-    # --- এডমিনদের জন্য পাসওয়ার্ড পরিবর্তন করার অপশন (Sidebar-এ) ---
+    # Admin Password Change Option
     if st.session_state.user_role == "Admin":
-        with st.sidebar.expander("🔑 পাসওয়ার্ড পরিবর্তন করুন"):
+        with st.sidebar.expander("🔑 Change Password"):
             with st.form("change_pass_form"):
-                old_pass = st.text_input(
-                    "বর্তমান পাসওয়ার্ড:", type="password"
-                )
-                new_pass = st.text_input("নতুন পাসওয়ার্ড:", type="password")
+                old_pass = st.text_input("Current Password:", type="password")
+                new_pass = st.text_input("New Password:", type="password")
                 confirm_pass = st.text_input(
-                    "নতুন পাসওয়ার্ড কনফার্ম করুন:", type="password"
+                    "Confirm New Password:", type="password"
                 )
-                pass_change_btn = st.form_submit_button("পাসওয়ার্ড আপডেট করুন")
+                pass_change_btn = st.form_submit_button("Update")
 
                 if pass_change_btn:
                     current_user_data = st.session_state.users_db.get(
                         st.session_state.user_id, {}
                     )
                     if current_user_data.get("pin") != old_pass:
-                        st.error("বর্তমান পাসওয়ার্ড ভুল হয়েছে!")
+                        st.error("Incorrect current password!")
                     elif not new_pass or (new_pass != confirm_pass):
-                        st.error(
-                            "নতুন পাসওয়ার্ড এবং কনফার্ম পাসওয়ার্ড মেলেনি বা খালি রয়েছে!"
-                        )
+                        st.error("Passwords do not match!")
                     else:
-                        # পাসওয়ার্ড আপডেট করা
                         st.session_state.users_db[st.session_state.user_id][
                             "pin"
                         ] = new_pass
                         save_users(st.session_state.users_db)
-                        st.success(
-                            "আপনার পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!"
-                        )
+                        st.success("Password updated!")
 
         st.sidebar.markdown("---")
 
-    # অ্যাপের ভেতরের রিফ্রেশ বাটন
-    if st.sidebar.button("🔄 পেজ রিফ্রেশ করুন (Refresh)"):
+    if st.sidebar.button("🔄 Refresh"):
         st.rerun()
 
-    # ম্যানুয়াল লগআউট বাটন
-    if st.sidebar.button("🚪 লগআউট (Logout)"):
+    if st.sidebar.button("🚪 Logout"):
         st.session_state.logged_in = False
         st.session_state.user_id = ""
         st.session_state.full_name = ""
@@ -300,11 +281,81 @@ else:
         st.session_state.user_role = ""
         st.rerun()
 
-    # --- মডিউল ক: অটো-আপডেটিং ডায়নামিক রোস্টার ও ডেট সার্চ ---
-    if menu == "ডিউটি রোস্টার ও সার্চ":
-        st.markdown("### 🔍 নির্দিষ্ট তারিখের ডিউটি সার্চ করুন")
+    # =============================================================
+    # 🏠 HOME PAGE (হোম পেজ)
+    # =============================================================
+    if selected_page == "🏠 Home Page":
+        # Plant Header with Logo & Professional Styling
+        col_logo, col_title = st.columns([1, 4])
+        with col_logo:
+            # এখানে আপনি আপনার প্ল্যান্টের লোগোর লিংক বা লোকাল ফাইল পাথ বসাতে পারেন
+            st.image(
+                "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+                width=100,
+            )
+        with col_title:
+            st.title("⚡ Power Plant Operation & Automation System")
+            st.caption(
+                "Electricity Generation Company of Bangladesh PLC (EGBPLC)"
+            )
+
+        st.markdown("---")
+
+        # Quick Navigation Buttons / Cards
+        st.markdown("### 🚀 Quick Navigation")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            if st.button("📅 Go to Duty Roster", use_container_width=True):
+                st.session_state.nav_page = "📅 Duty Roster"
+                st.rerun()
+        with c2:
+            st.button(
+                "📊 Energy Monitoring (Coming Soon)",
+                use_container_width=True,
+                disabled=True,
+            )
+        with c3:
+            st.button(
+                "📋 Reports & Handover (Coming Soon)",
+                use_container_width=True,
+                disabled=True,
+            )
+
+        st.markdown("---")
+
+        # Temporary Notice Board on Home Page
+        st.markdown("### 📢 Temporary Notice Board")
+        with st.form("home_notice_form"):
+            new_notice = st.text_input("Post a new notice:")
+            add_btn = st.form_submit_button("Publish Notice")
+            if add_btn and new_notice:
+                st.session_state.notices.append(
+                    f"{new_notice} (By: {st.session_state.full_name})"
+                )
+                st.success("Notice published successfully!")
+                st.rerun()
+
+        if len(st.session_state.notices) == 0:
+            st.info("No active notices.")
+        else:
+            for idx, notice in enumerate(st.session_state.notices):
+                col_n1, col_n2 = st.columns([8, 2])
+                with col_n1:
+                    st.markdown(f"📌 {notice}")
+                with col_n2:
+                    if st.session_state.user_role == "Admin" or st.button(
+                        "Delete", key=f"home_del_{idx}"
+                    ):
+                        st.session_state.notices.pop(idx)
+                        st.rerun()
+
+    # =============================================================
+    # 📅 DUTY ROSTER PAGE (ডিউটি রোস্টার পেজ)
+    # =============================================================
+    elif selected_page == "📅 Duty Roster":
+        st.markdown("### 🔍 Search Shift Duty")
         selected_search_date = st.date_input(
-            "তারিখ সিলেক্ট করুন:", datetime.date.today()
+            "Select Date:", datetime.date.today()
         )
 
         shift_pattern = [
@@ -334,7 +385,7 @@ else:
         o_pat = oa_pattern[search_day_diff % 6]
 
         st.success(
-            f"📅 {selected_search_date.strftime('%d-%b-%Y (%A)')} এর ডিউটি স্ট্যাটাস:"
+            f"📅 Status for {selected_search_date.strftime('%d-%b-%Y (%A)')}:"
         )
 
         single_row_html = f"""
@@ -366,7 +417,6 @@ else:
         today = datetime.date.today()
         current_year = today.strftime("%Y")
 
-        # মূল ডিউটি রোস্টার টেবিল (৯ নং সারিতে আজকের দিন, ওপরে ৮ দিন, নিচে ২৫ দিন)
         html_table = (
             '<div style="width: 100%; max-width: 900px; max-height: 500px; overflow-y: auto; overflow-x: auto; margin: 0 auto; font-family: sans-serif; border: 2px solid black;">'
             '<table style="width: 100%; border-collapse: collapse; background-color: white;">'
@@ -419,50 +469,27 @@ else:
         html_table += "</tbody></table></div>"
         st.markdown(html_table, unsafe_allow_html=True)
 
-    # --- মডিউল খ: টেম্পোরারি নোটিশ বোর্ড ---
-    elif menu == "টেম্পোরারি নোটিশ বোর্ড":
-        st.header("📢 টেম্পোরারি নোটিশ বোর্ড")
+    # =============================================================
+    # 🛠️ ADMIN CONTROL PAGE (এডমিন কন্ট্রোল পেজ)
+    # =============================================================
+    elif selected_page == "🛠️ Admin Control":
+        st.header("🛠️ Admin Panel")
+        st.info(f"Welcome Admin [{st.session_state.full_name}]!")
 
-        with st.form("notice_form"):
-            new_notice = st.text_input("নতুন জরুরি নোটিশ লিখুন:")
-            add_btn = st.form_submit_button("নোটিশ পোস্ট করুন")
-            if add_btn and new_notice:
-                st.session_state.notices.append(
-                    f"{new_notice} (পোস্ট করেছেন: {st.session_state.full_name})"
-                )
-                st.success("নোটিশ সফলভাবে যোগ করা হয়েছে!")
-                st.rerun()
-
-        st.markdown("### বর্তমান নোটিশসমূহ:")
-        if len(st.session_state.notices) == 0:
-            st.info("বর্তমানে কোনো নোটিশ নেই।")
-        else:
-            for idx, notice in enumerate(st.session_state.notices):
-                col1, col2 = st.columns([8, 2])
-                with col1:
-                    st.markdown(f"📌 {notice}")
-                with col2:
-                    if st.button("ডিলিট / ভ্যানিশ", key=f"del_{idx}"):
-                        st.session_state.notices.pop(idx)
-                        st.rerun()
-
-    # --- মডিউল গ: এডমিন কন্ট্রোল ---
-    elif menu == "এডমিন কন্ট্রোল (Shift & User Management)":
-        st.header("🛠️ এডমিন প্যানেল")
-        st.info(
-            f"স্বাগতম এডমিন [{st.session_state.full_name}]! এখান থেকে শিফট মেম্বার এবং নতুন অ্যাকাউন্ট অনুমোদন করতে পারবেন।"
-        )
-
-        tab1, tab2 = st.tabs(
-            ["👥 শিফট মেম্বার এডিট", "⏳ ইউজার অনুমোদন (User Approvals)"]
+        tab1, tab2, tab3 = st.tabs(
+            [
+                "👥 Edit Shift Members",
+                "⏳ User Approvals",
+                "🔑 Reset User Password",
+            ]
         )
 
         with tab1:
             col_left, col_right = st.columns(2)
             with col_left:
-                st.markdown("### ✏️ মেম্বারের শিফট পরিবর্তন করুন")
+                st.markdown("### ✏️ Transfer Member")
                 selected_shift_from = st.selectbox(
-                    "বর্তমান শিফট সিলেক্ট করুন:",
+                    "Current Shift:",
                     [
                         "Shift 1",
                         "Shift 2",
@@ -478,10 +505,10 @@ else:
 
                 if member_list:
                     selected_member = st.selectbox(
-                        "মেম্বারের নাম সিলেক্ট করুন:", member_list
+                        "Select Member:", member_list
                     )
                     selected_shift_to = st.selectbox(
-                        "নতুন কোন শিফটে নিতে চান?",
+                        "Transfer To:",
                         [
                             "Shift 1",
                             "Shift 2",
@@ -492,7 +519,7 @@ else:
                         ],
                     )
 
-                    if st.button("মেম্বারের শিফট আপডেট করুন"):
+                    if st.button("Update Shift"):
                         if selected_shift_from != selected_shift_to:
                             st.session_state.shift_members[
                                 selected_shift_from
@@ -501,20 +528,18 @@ else:
                                 selected_shift_to
                             ].append(selected_member)
                             st.success(
-                                f"সফলভাবে {selected_member}-কে {selected_shift_from} থেকে {selected_shift_to}-এ ট্রান্সফার করা হয়েছে!"
+                                f"{selected_member} moved to {selected_shift_to}!"
                             )
                             st.rerun()
                         else:
-                            st.warning(
-                                "দয়া করে দুটি আলাদা ক্যাটাগরি সিলেক্ট করুন।"
-                            )
+                            st.warning("Select a different shift.")
                 else:
-                    st.warning("এই শিফটে বর্তমানে কোনো সদস্য নেই।")
+                    st.warning("No members in this shift.")
 
             with col_right:
-                st.markdown("### 📝 সরাসরি সদস্যের নাম সংশোধন/এডিট")
+                st.markdown("### 📝 Edit Shift List")
                 target_shift = st.selectbox(
-                    "শিফট নির্বাচন:",
+                    "Select Shift:",
                     [
                         "Shift 1",
                         "Shift 2",
@@ -528,24 +553,22 @@ else:
                 current_members = st.session_state.shift_members[target_shift]
 
                 _edited_members_str = st.text_area(
-                    "সদস্যদের নাম (প্রতি লাইনে একটি নাম লিখুন):",
+                    "Member Names (One per line):",
                     value="\n".join(current_members),
                 )
 
-                if st.button("তালিকা সেভ করুন"):
+                if st.button("Save Members"):
                     new_list = [
                         name.strip()
                         for name in _edited_members_str.split("\n")
                         if name.strip()
                     ]
                     st.session_state.shift_members[target_shift] = new_list
-                    st.success(f"{target_shift}-এর মেম্বার লিস্ট আপডেট হয়েছে!")
+                    st.success(f"{target_shift} member list updated!")
                     st.rerun()
 
         with tab2:
-            st.markdown(
-                "### ⏳ অপেক্ষমাণ ইউজার তালিকা (Pending Approvals)"
-            )
+            st.markdown("### ⏳ Pending Approvals")
             pending_users = {
                 uid: info
                 for uid, info in st.session_state.users_db.items()
@@ -553,7 +576,7 @@ else:
             }
 
             if not pending_users:
-                st.info("বর্তমানে অনুমোদনের অপেক্ষায় কোনো নতুন ইউজার নেই।")
+                st.info("No pending users.")
             else:
                 for p_uid, p_info in pending_users.items():
                     col_u1, col_u2, col_u3 = st.columns([4, 2, 2])
@@ -563,20 +586,51 @@ else:
                             f"ID: {p_uid}"
                         )
                     with col_u2:
-                        if st.button("অনুমোদন দিন (Approve)", key=f"app_{p_uid}"):
+                        if st.button("Approve", key=f"app_{p_uid}"):
                             st.session_state.users_db[p_uid]["approved"] = True
                             save_users(st.session_state.users_db)
                             st.success(
-                                f"{p_info.get('full_name')}-এর অ্যাকাউন্ট অনুমোদিত হয়েছে!"
+                                f"{p_info.get('full_name')} approved!"
                             )
                             st.rerun()
                     with col_u3:
-                        if st.button(
-                            "বাতিল / ডিলিট", key=f"del_u_{p_uid}"
-                        ):
+                        if st.button("Reject", key=f"del_u_{p_uid}"):
                             del st.session_state.users_db[p_uid]
                             save_users(st.session_state.users_db)
                             st.warning(
-                                f"{p_info.get('full_name')}-এর আবেদন বাতিল করা হয়েছে।"
+                                f"{p_info.get('full_name')} rejected."
                             )
                             st.rerun()
+
+        with tab3:
+            st.markdown("### 🔑 Reset User Password")
+            st.caption("Reset password for engineers who forgot their pin:")
+            approved_users_list = [
+                uid
+                for uid, info in st.session_state.users_db.items()
+                if info.get("role") != "Admin" and info.get("approved", True)
+            ]
+
+            if approved_users_list:
+                with st.form("reset_user_pass_form"):
+                    target_user_id = st.selectbox(
+                        "Select User ID:", approved_users_list
+                    )
+                    temp_pass = st.text_input(
+                        "New Temporary Password:", type="password"
+                    )
+                    reset_btn = st.form_submit_button("Reset Password")
+
+                    if reset_btn:
+                        if temp_pass:
+                            st.session_state.users_db[target_user_id][
+                                "pin"
+                            ] = temp_pass
+                            save_users(st.session_state.users_db)
+                            st.success(
+                                f"Password reset successfully for {target_user_id}!"
+                            )
+                        else:
+                            st.warning("Enter a valid new password.")
+            else:
+                st.info("No registered engineers available.")
