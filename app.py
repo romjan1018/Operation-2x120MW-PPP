@@ -14,6 +14,7 @@ st.set_page_config(
 # -------------------------------------------------------------
 USERS_FILE = "users_db.json"
 
+# Default 4 Admins (Uppercase Format)
 default_users = {
     "SHIFT-1ST": {
         "full_name": "Shift In-Charge 1st",
@@ -50,7 +51,12 @@ def load_users():
     if os.path.exists(USERS_FILE):
         with open(USERS_FILE, "r", encoding="utf-8") as f:
             try:
-                return json.load(f)
+                data = json.load(f)
+                # Ensure 4 Admins are always present in the database
+                for admin_id, admin_info in default_users.items():
+                    if admin_id not in data:
+                        data[admin_id] = admin_info
+                return data
             except:
                 return default_users
     return default_users
@@ -63,6 +69,7 @@ def save_users(users):
 
 if "users_db" not in st.session_state:
     st.session_state.users_db = load_users()
+    save_users(st.session_state.users_db)
 
 # -------------------------------------------------------------
 # Session State Setup
@@ -132,6 +139,7 @@ if not st.session_state.logged_in:
 
     auth_tab1, auth_tab2 = st.tabs(["🔑 Login", "📝 Sign Up"])
 
+    # --- Login Tab ---
     with auth_tab1:
         st.caption("Enter your User ID and Password:")
         with st.form("login_form"):
@@ -172,6 +180,7 @@ if not st.session_state.logged_in:
                     st.success("Login successful!")
                     st.rerun()
 
+    # --- Sign Up Tab ---
     with auth_tab2:
         st.caption("Fill details for new account (Approval required):")
         with st.form("signup_form"):
@@ -209,16 +218,13 @@ if not st.session_state.logged_in:
 
 else:
     # -------------------------------------------------------------
-    # 2. Main Dashboard & Navigation (Home Page, Roster, etc.)
+    # 2. Main Dashboard & Navigation
     # -------------------------------------------------------------
-
-    # Sidebar Profile & Controls
     st.sidebar.title(f"👤 {st.session_state.full_name}")
     st.sidebar.caption(f"📌 {st.session_state.designation}")
     st.sidebar.info(f"Role: {st.session_state.user_role}")
     st.sidebar.markdown("---")
 
-    # Main Navigation menu (Home Page as default)
     nav_options = ["🏠 Home Page", "📅 Duty Roster"]
     if st.session_state.user_role == "Admin":
         nav_options.append("🛠️ Admin Control")
@@ -282,13 +288,11 @@ else:
         st.rerun()
 
     # =============================================================
-    # 🏠 HOME PAGE (হোম পেজ)
+    # 🏠 HOME PAGE
     # =============================================================
     if selected_page == "🏠 Home Page":
-        # Plant Header with Logo & Professional Styling
         col_logo, col_title = st.columns([1, 4])
         with col_logo:
-            # এখানে আপনি আপনার প্ল্যান্টের লোগোর লিংক বা লোকাল ফাইল পাথ বসাতে পারেন
             st.image(
                 "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
                 width=100,
@@ -301,7 +305,6 @@ else:
 
         st.markdown("---")
 
-        # Quick Navigation Buttons / Cards
         st.markdown("### 🚀 Quick Navigation")
         c1, c2, c3 = st.columns(3)
         with c1:
@@ -323,7 +326,6 @@ else:
 
         st.markdown("---")
 
-        # Temporary Notice Board on Home Page
         st.markdown("### 📢 Temporary Notice Board")
         with st.form("home_notice_form"):
             new_notice = st.text_input("Post a new notice:")
@@ -350,7 +352,7 @@ else:
                         st.rerun()
 
     # =============================================================
-    # 📅 DUTY ROSTER PAGE (ডিউটি রোস্টার পেজ)
+    # 📅 DUTY ROSTER PAGE
     # =============================================================
     elif selected_page == "📅 Duty Roster":
         st.markdown("### 🔍 Search Shift Duty")
@@ -470,7 +472,7 @@ else:
         st.markdown(html_table, unsafe_allow_html=True)
 
     # =============================================================
-    # 🛠️ ADMIN CONTROL PAGE (এডমিন কন্ট্রোল পেজ)
+    # 🛠️ ADMIN CONTROL PAGE
     # =============================================================
     elif selected_page == "🛠️ Admin Control":
         st.header("🛠️ Admin Panel")
