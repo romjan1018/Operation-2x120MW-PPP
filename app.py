@@ -10,11 +10,11 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------------
-# User Database File Management
+# Database File Management (Users & Notices)
 # -------------------------------------------------------------
 USERS_FILE = "users_db.json"
+NOTICES_FILE = "notices_db.json"
 
-# Default 4 Admins (Uppercase Format)
 default_users = {
     "SHIFT-1ST": {
         "full_name": "Shift In-Charge 1st",
@@ -52,7 +52,6 @@ def load_users():
         with open(USERS_FILE, "r", encoding="utf-8") as f:
             try:
                 data = json.load(f)
-                # Ensure 4 Admins are always present in the database
                 for admin_id, admin_info in default_users.items():
                     if admin_id not in data:
                         data[admin_id] = admin_info
@@ -67,13 +66,31 @@ def save_users(users):
         json.dump(users, f, ensure_ascii=False, indent=4)
 
 
+def load_notices():
+    if os.path.exists(NOTICES_FILE):
+        with open(NOTICES_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except:
+                return ["Urgent: Please submit shift handover reports on time."]
+    return ["Urgent: Please submit shift handover reports on time."]
+
+
+def save_notices(notices):
+    with open(NOTICES_FILE, "w", encoding="utf-8") as f:
+        json.dump(notices, f, ensure_ascii=False, indent=4)
+
+
+# -------------------------------------------------------------
+# Persistent Session State Setup
+# -------------------------------------------------------------
 if "users_db" not in st.session_state:
     st.session_state.users_db = load_users()
     save_users(st.session_state.users_db)
 
-# -------------------------------------------------------------
-# Session State Setup
-# -------------------------------------------------------------
+if "notices" not in st.session_state:
+    st.session_state.notices = load_notices()
+
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "user_id" not in st.session_state:
@@ -84,6 +101,10 @@ if "designation" not in st.session_state:
     st.session_state.designation = ""
 if "user_role" not in st.session_state:
     st.session_state.user_role = ""
+
+# Navigation session state
+if "active_page" not in st.session_state:
+    st.session_state.active_page = "🏠 Home Page"
 
 # Shift Members and OA Members Database
 if "shift_members" not in st.session_state:
@@ -125,11 +146,6 @@ if "shift_members" not in st.session_state:
         "OA-2": ["Sohel Rana"],
     }
 
-if "notices" not in st.session_state:
-    st.session_state.notices = [
-        "Urgent: Please submit shift handover reports on time."
-    ]
-
 # -------------------------------------------------------------
 # 1. Login and Sign-Up Panel
 # -------------------------------------------------------------
@@ -139,7 +155,6 @@ if not st.session_state.logged_in:
 
     auth_tab1, auth_tab2 = st.tabs(["🔑 Login", "📝 Sign Up"])
 
-    # --- Login Tab ---
     with auth_tab1:
         st.caption("Enter your User ID and Password:")
         with st.form("login_form"):
@@ -180,7 +195,6 @@ if not st.session_state.logged_in:
                     st.success("Login successful!")
                     st.rerun()
 
-    # --- Sign Up Tab ---
     with auth_tab2:
         st.caption("Fill details for new account (Approval required):")
         with st.form("signup_form"):
@@ -229,22 +243,15 @@ else:
     if st.session_state.user_role == "Admin":
         nav_options.append("🛠️ Admin Control")
 
-    selected_page = st.sidebar.radio("Navigation Menu", nav_options)
+    if st.session_state.active_page not in nav_options:
+        st.session_state.active_page = "🏠 Home Page"
 
-    # Sidebar Shift Members Table
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 👥 Shift Members")
-    df_side_members = pd.DataFrame(
-        {
-            "Shift 1": pd.Series(st.session_state.shift_members["Shift 1"]),
-            "Shift 2": pd.Series(st.session_state.shift_members["Shift 2"]),
-            "Shift 3": pd.Series(st.session_state.shift_members["Shift 3"]),
-            "Shift 4": pd.Series(st.session_state.shift_members["Shift 4"]),
-            "OA-1": pd.Series(st.session_state.shift_members["OA-1"]),
-            "OA-2": pd.Series(st.session_state.shift_members["OA-2"]),
-        }
+    selected_page = st.sidebar.radio(
+        "Navigation Menu",
+        nav_options,
+        index=nav_options.index(st.session_state.active_page),
     )
-    st.sidebar.dataframe(df_side_members, height=250)
+    st.session_state.active_page = selected_page
 
     st.sidebar.markdown("---")
 
@@ -285,6 +292,7 @@ else:
         st.session_state.full_name = ""
         st.session_state.designation = ""
         st.session_state.user_role = ""
+        st.session_state.active_page = "🏠 Home Page"
         st.rerun()
 
     # =============================================================
@@ -298,7 +306,7 @@ else:
                 width=100,
             )
         with col_title:
-            st.title("⚡ Power Plant Operation & Automation System")
+            st.title("⚡ Power Plant Operation System")
             st.caption(
                 "Electricity Generation Company of Bangladesh PLC (EGBPLC)"
             )
@@ -309,7 +317,7 @@ else:
         c1, c2, c3 = st.columns(3)
         with c1:
             if st.button("📅 Go to Duty Roster", use_container_width=True):
-                st.session_state.nav_page = "📅 Duty Roster"
+                st.session_state.active_page = "📅 Duty Roster"
                 st.rerun()
         with c2:
             st.button(
@@ -334,6 +342,7 @@ else:
                 st.session_state.notices.append(
                     f"{new_notice} (By: {st.session_state.full_name})"
                 )
+                save_notices(st.session_state.notices)
                 st.success("Notice published successfully!")
                 st.rerun()
 
@@ -349,12 +358,17 @@ else:
                         "Delete", key=f"home_del_{idx}"
                     ):
                         st.session_state.notices.pop(idx)
+                        save_notices(st.session_state.notices)
                         st.rerun()
 
     # =============================================================
     # 📅 DUTY ROSTER PAGE
     # =============================================================
     elif selected_page == "📅 Duty Roster":
+        if st.button("🏠 Back to Home Page"):
+            st.session_state.active_page = "🏠 Home Page"
+            st.rerun()
+
         st.markdown("### 🔍 Search Shift Duty")
         selected_search_date = st.date_input(
             "Select Date:", datetime.date.today()
@@ -390,16 +404,24 @@ else:
             f"📅 Status for {selected_search_date.strftime('%d-%b-%Y (%A)')}:"
         )
 
+        # Prepare member lists for tooltips/hover display
+        s1_names = ", ".join(st.session_state.shift_members["Shift 1"])
+        s2_names = ", ".join(st.session_state.shift_members["Shift 2"])
+        s3_names = ", ".join(st.session_state.shift_members["Shift 3"])
+        s4_names = ", ".join(st.session_state.shift_members["Shift 4"])
+        oa1_names = ", ".join(st.session_state.shift_members["OA-1"])
+        oa2_names = ", ".join(st.session_state.shift_members["OA-2"])
+
         single_row_html = f"""
         <div style="overflow-x: auto; width: 100%; margin-bottom: 20px;">
             <table style="width: 100%; border-collapse: collapse; border: 2px solid black; background-color: white; text-align: center; font-family: sans-serif;">
                 <tr style="background-color: #262626; color: white; font-size: 13px;">
-                    <th style="border: 1px solid black; padding: 6px;">Shift 1</th>
-                    <th style="border: 1px solid black; padding: 6px;">Shift 2</th>
-                    <th style="border: 1px solid black; padding: 6px;">Shift 3</th>
-                    <th style="border: 1px solid black; padding: 6px;">Shift 4</th>
-                    <th style="border: 1px solid black; padding: 6px;">OA-1</th>
-                    <th style="border: 1px solid black; padding: 6px;">OA-2</th>
+                    <th style="border: 1px solid black; padding: 6px;" title="Members: {s1_names}">Shift 1 (Hover for Members)</th>
+                    <th style="border: 1px solid black; padding: 6px;" title="Members: {s2_names}">Shift 2 (Hover for Members)</th>
+                    <th style="border: 1px solid black; padding: 6px;" title="Members: {s3_names}">Shift 3 (Hover for Members)</th>
+                    <th style="border: 1px solid black; padding: 6px;" title="Members: {s4_names}">Shift 4 (Hover for Members)</th>
+                    <th style="border: 1px solid black; padding: 6px;" title="Members: {oa1_names}">OA-1 (Hover for Members)</th>
+                    <th style="border: 1px solid black; padding: 6px;" title="Members: {oa2_names}">OA-2 (Hover for Members)</th>
                 </tr>
                 <tr style="font-weight: bold; font-size: 16px; color: #000000;">
                     <td style="border: 1px solid black; padding: 10px;">{s_pat["1"]}</td>
@@ -432,12 +454,12 @@ else:
             '<tr style="background-color: #262626; color: white;">'
             '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Date</th>'
             '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Day</th>'
-            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 1</th>'
-            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 2</th>'
-            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 3</th>'
-            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">Shift 4</th>'
-            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">OA-1</th>'
-            '<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;">OA-2</th>'
+            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {s1_names}">Shift 1 ℹ️</th>'
+            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {s2_names}">Shift 2 ℹ️</th>'
+            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {s3_names}">Shift 3 ℹ️</th>'
+            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {s4_names}">Shift 4 ℹ️</th>'
+            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {oa1_names}">OA-1 ℹ️</th>'
+            f'<th style="position: sticky; top: 95px; z-index: 2; border: 1px solid black; padding: 8px; text-align: center; font-size: 15px; background-color: #262626;" title="Members: {oa2_names}">OA-2 ℹ️</th>'
             "</tr>"
             "</thead>"
             "<tbody>"
@@ -475,6 +497,10 @@ else:
     # 🛠️ ADMIN CONTROL PAGE
     # =============================================================
     elif selected_page == "🛠️ Admin Control":
+        if st.button("🏠 Back to Home Page"):
+            st.session_state.active_page = "🏠 Home Page"
+            st.rerun()
+
         st.header("🛠️ Admin Panel")
         st.info(f"Welcome Admin [{st.session_state.full_name}]!")
 
