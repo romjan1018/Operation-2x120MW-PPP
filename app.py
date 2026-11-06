@@ -344,26 +344,24 @@ else:
 
         st.markdown("### 📢 Temporary Notice Board")
 
-        # Notice Publishing Section (Direct text input and button outside strict forms)
-        notice_input = st.text_input(
-            "Write a new notice:", key="notice_input_field"
-        )
-        if st.button("Publish Notice"):
-            if notice_input.strip():
-                # Load latest from file first to avoid overwriting conflicts
-                current_list = load_notices()
-                current_list.append(
-                    f"{notice_input.strip()} (By: {st.session_state.full_name})"
-                )
-                save_notices(current_list)
-                st.session_state.notices = current_list
-                st.success("Notice published successfully!")
-                st.rerun()
-            else:
-                st.warning("Please write something for the notice.")
+        # Fixed Notice Form with clear_on_submit to guarantee publishing
+        with st.form("notice_publish_form", clear_on_submit=True):
+            notice_input = st.text_input("Write a new notice:")
+            publish_btn = st.form_submit_button("Publish Notice")
+
+            if publish_btn:
+                if notice_input.strip():
+                    current_list = load_notices()
+                    current_list.append(
+                        f"{notice_input.strip()} (By: {st.session_state.full_name})"
+                    )
+                    save_notices(current_list)
+                    st.session_state.notices = current_list
+                    st.success("Notice published successfully!")
+                else:
+                    st.warning("Please write something for the notice.")
 
         st.markdown("#### Active Notices:")
-        # Always fetch latest from file
         active_notices = load_notices()
         st.session_state.notices = active_notices
 
@@ -428,27 +426,28 @@ else:
         )
 
         st.markdown(
-            "👇 *শIFT বা OA-এর ওপর ক্লিক করে মেম্বারদের তালিকা দেখুন:*"
+            "<p style='margin-bottom: 5px; font-weight: bold; color: #333;'>💡 শিফট মেম্বার দেখতে নিচের হেডিং বাটনে ক্লিক করুন:</p>",
+            unsafe_allow_html=True,
         )
         b1, b2, b3, b4, b5, b6 = st.columns(6)
 
         with b1:
-            if st.button("Shift 1", use_container_width=True):
+            if st.button("Shift 1 👤", use_container_width=True):
                 st.session_state.selected_shift_view = "Shift 1"
         with b2:
-            if st.button("Shift 2", use_container_width=True):
+            if st.button("Shift 2 👤", use_container_width=True):
                 st.session_state.selected_shift_view = "Shift 2"
         with b3:
-            if st.button("Shift 3", use_container_width=True):
+            if st.button("Shift 3 👤", use_container_width=True):
                 st.session_state.selected_shift_view = "Shift 3"
         with b4:
-            if st.button("Shift 4", use_container_width=True):
+            if st.button("Shift 4 👤", use_container_width=True):
                 st.session_state.selected_shift_view = "Shift 4"
         with b5:
-            if st.button("OA-1", use_container_width=True):
+            if st.button("OA-1 👤", use_container_width=True):
                 st.session_state.selected_shift_view = "OA-1"
         with b6:
-            if st.button("OA-2", use_container_width=True):
+            if st.button("OA-2 👤", use_container_width=True):
                 st.session_state.selected_shift_view = "OA-2"
 
         if st.session_state.selected_shift_view:
@@ -458,7 +457,7 @@ else:
             st.info(f"👥 *{sh_name} Members:* {members_str}")
 
         single_row_html = f"""
-        <div style="overflow-x: auto; width: 100%; margin-top: 10px; margin-bottom: 20px;">
+        <div style="overflow-x: auto; width: 100%; margin-top: 5px; margin-bottom: 20px;">
             <table style="width: 100%; border-collapse: collapse; border: 2px solid black; background-color: white; text-align: center; font-family: sans-serif;">
                 <tr style="background-color: #262626; color: white; font-size: 13px;">
                     <th style="border: 1px solid black; padding: 6px;">Shift 1</th>
@@ -707,3 +706,5 @@ else:
                             st.warning("Enter a valid new password.")
             else:
                 st.info("No registered engineers available.")
+
+<FollowUp label="Want me to explain how the notice form submission mechanism is structured?" query="Explain how the notice form submission and persistence mechanism is structured in this Streamlit script."/>
