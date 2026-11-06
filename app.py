@@ -450,11 +450,35 @@ else:
 
         st.markdown("---")
 
-        # --- Shift Member View Buttons placed right above Duty Roster Table headers ---
+        # --- Shift Member View Buttons in a Single Row (Forced for Mobile & PC) ---
         st.markdown(
             "<p style='margin-bottom: 5px; font-weight: bold; color: #333;'>👥 শিফট মেম্বারদের তালিকা দেখতে নিচের হেডিং বাটনে ক্লিক করুন:</p>",
             unsafe_allow_html=True,
         )
+
+        st.markdown(
+            """
+            <style>
+            div.stButton > button {
+                width: 100%;
+                font-size: 12px;
+                padding: 6px 2px;
+            }
+            [data-testid="stHorizontalBlock"] {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                gap: 4px;
+            }
+            [data-testid="stHorizontalBlock"] > div {
+                flex: 1;
+                min-width: 0;
+            }
+            </style>
+        """,
+            unsafe_allow_html=True,
+        )
+
         b_col1, b_col2, b_col3, b_col4, b_col5, b_col6 = st.columns(6)
 
         with b_col1:
@@ -483,7 +507,7 @@ else:
             members_str = ", ".join(members)
             st.markdown(
                 f"""
-            <div style="background-color: #000000; color: #ffffff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-family: sans-serif;">
+            <div style="background-color: #000000; color: #ffffff; padding: 12px; border-radius: 8px; margin-top: 10px; margin-bottom: 15px; font-family: sans-serif;">
                 👥 <b>{sh_name} Members:</b> {members_str}
             </div>
             """,
