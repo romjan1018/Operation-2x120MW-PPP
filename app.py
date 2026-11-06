@@ -424,37 +424,6 @@ else:
             f"📅 Status for {selected_search_date.strftime('%d-%b-%Y (%A)')}:"
         )
 
-        st.markdown(
-            "<p style='margin-bottom: 5px; font-weight: bold; color: #333;'>💡 শিফট মেম্বার দেখতে নিচের হেডিং বাটনে ক্লিক করুন:</p>",
-            unsafe_allow_html=True,
-        )
-        b1, b2, b3, b4, b5, b6 = st.columns(6)
-
-        with b1:
-            if st.button("Shift 1 👤", use_container_width=True):
-                st.session_state.selected_shift_view = "Shift 1"
-        with b2:
-            if st.button("Shift 2 👤", use_container_width=True):
-                st.session_state.selected_shift_view = "Shift 2"
-        with b3:
-            if st.button("Shift 3 👤", use_container_width=True):
-                st.session_state.selected_shift_view = "Shift 3"
-        with b4:
-            if st.button("Shift 4 👤", use_container_width=True):
-                st.session_state.selected_shift_view = "Shift 4"
-        with b5:
-            if st.button("OA-1 👤", use_container_width=True):
-                st.session_state.selected_shift_view = "OA-1"
-        with b6:
-            if st.button("OA-2 👤", use_container_width=True):
-                st.session_state.selected_shift_view = "OA-2"
-
-        if st.session_state.selected_shift_view:
-            sh_name = st.session_state.selected_shift_view
-            members = st.session_state.shift_members.get(sh_name, [])
-            members_str = ", ".join(members)
-            st.info(f"👥 *{sh_name} Members:* {members_str}")
-
         single_row_html = f"""
         <div style="overflow-x: auto; width: 100%; margin-top: 5px; margin-bottom: 20px;">
             <table style="width: 100%; border-collapse: collapse; border: 2px solid black; background-color: white; text-align: center; font-family: sans-serif;">
@@ -480,6 +449,46 @@ else:
         st.markdown(single_row_html, unsafe_allow_html=True)
 
         st.markdown("---")
+
+        # --- Shift Member View Buttons placed right above Duty Roster Table headers ---
+        st.markdown(
+            "<p style='margin-bottom: 5px; font-weight: bold; color: #333;'>👥 শিফট মেম্বারদের তালিকা দেখতে নিচের হেডিং বাটনে ক্লিক করুন:</p>",
+            unsafe_allow_html=True,
+        )
+        b_col1, b_col2, b_col3, b_col4, b_col5, b_col6 = st.columns(6)
+
+        with b_col1:
+            if st.button("Shift 1 👤", use_container_width=True):
+                st.session_state.selected_shift_view = "Shift 1"
+        with b_col2:
+            if st.button("Shift 2 👤", use_container_width=True):
+                st.session_state.selected_shift_view = "Shift 2"
+        with b_col3:
+            if st.button("Shift 3 👤", use_container_width=True):
+                st.session_state.selected_shift_view = "Shift 3"
+        with b_col4:
+            if st.button("Shift 4 👤", use_container_width=True):
+                st.session_state.selected_shift_view = "Shift 4"
+        with b_col5:
+            if st.button("OA-1 👤", use_container_width=True):
+                st.session_state.selected_shift_view = "OA-1"
+        with b_col6:
+            if st.button("OA-2 👤", use_container_width=True):
+                st.session_state.selected_shift_view = "OA-2"
+
+        # Display selected shift members with Black Background and White Text
+        if st.session_state.selected_shift_view:
+            sh_name = st.session_state.selected_shift_view
+            members = st.session_state.shift_members.get(sh_name, [])
+            members_str = ", ".join(members)
+            st.markdown(
+                f"""
+            <div style="background-color: #000000; color: #ffffff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-family: sans-serif;">
+                👥 <b>{sh_name} Members:</b> {members_str}
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
 
         today = datetime.date.today()
         current_year = today.strftime("%Y")
