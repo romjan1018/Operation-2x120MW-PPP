@@ -344,7 +344,6 @@ else:
 
         st.markdown("### 📢 Temporary Notice Board")
 
-        # Fixed Notice Form with clear_on_submit to guarantee publishing
         with st.form("notice_publish_form", clear_on_submit=True):
             notice_input = st.text_input("Write a new notice:")
             publish_btn = st.form_submit_button("Publish Notice")
@@ -706,5 +705,3 @@ else:
                             st.warning("Enter a valid new password.")
             else:
                 st.info("No registered engineers available.")
-
-<FollowUp label="Want me to explain how the notice form submission mechanism is structured?" query="Explain how the notice form submission and persistence mechanism is structured in this Streamlit script."/>
